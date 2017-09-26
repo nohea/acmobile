@@ -14,15 +14,15 @@ angular.module('copayApp.services').factory('configService', function(storageSer
 
     // Bitcore wallet service URL
     bws: {
-      url: 'https://bws.bitpay.com/bws/api',
+      url: 'https://bws.btc.nationofhawaii.info/bws/api',
     },
 
     download: {
       bitpay: {
-        url: 'https://bitpay.com/wallet'
+        url: 'https://www.alohacoin.nationofhawaii.info/wallet'
       },
       copay: {
-        url: 'https://copay.io/#download'
+        url: 'https://www.alohacoin.nationofhawaii.info/wallet'
       }
     },
 
