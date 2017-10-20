@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('copayApp.services').factory('txFormatService', function($filter, bwcService, rateService, configService, lodash) {
+angular.module('copayApp.services').factory('txFormatService', function($filter, bwcService, rateService, configService, lodash, $log) {
   var root = {};
 
   root.Utils = bwcService.getUtils();
-
+  $log.debug("bwcService.getUtils() worked");
 
   root.formatAmount = function(satoshis, fullPrecision) {
+    $log.debug("txFormatService(): formatAmount() satoshis " + satoshis + ",  fullPrecision " + fullPrecision);
     var config = configService.getSync().wallet.settings;
     if (config.unitCode == 'sat') return satoshis;
 
@@ -14,14 +15,17 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
     var opts = {
       fullPrecision: !!fullPrecision
     };
+    $log.debug("calling this.Utils.formatAmount()");
     return this.Utils.formatAmount(satoshis, config.unitCode, opts);
   };
+  $log.debug("txFormatService(): root.formatAmount " + root.formatAmount);
 
   root.formatAmountStr = function(satoshis) {
     if (isNaN(satoshis)) return;
     var config = configService.getSync().wallet.settings;
     return root.formatAmount(satoshis) + ' ' + config.unitName;
   };
+  $log.debug("txFormatService(): root.formatAmountStr " + root.formatAmountStr);
 
   root.toFiat = function(satoshis, code, cb) {
     if (isNaN(satoshis)) return;
@@ -42,6 +46,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
+  $log.debug("txFormatService(): root.toFiat " + root.toFiat);
 
   root.formatToUSD = function(satoshis, cb) {
     if (isNaN(satoshis)) return;
@@ -62,6 +67,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
+  $log.debug("txFormatService(): root.formatToUSD " + root.formatToUSD);
 
   root.formatAlternativeStr = function(satoshis, cb) {
     if (isNaN(satoshis)) return;
@@ -85,6 +91,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
+  $log.debug("txFormatService(): root.formatAlternativeStr " + root.formatAlternativeStr);
 
   root.processTx = function(tx) {
     if (!tx || tx.action == 'invalid')
@@ -120,6 +127,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
 
     return tx;
   };
+  $log.debug("txFormatService(): root.processTx " + JSON.stringify(root.processTx));
 
   root.formatPendingTxps = function(txps) {
     $scope.pendingTxProposalsCountForUs = 0;
@@ -179,6 +187,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
 
     return txps;
   };
+  $log.debug("txFormatService(): root.formatPendingTxps " + root.formatPendingTxps);
 
   root.parseAmount = function(amount, currency) {
     var config = configService.getSync().wallet.settings;
@@ -214,6 +223,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       amountUnitStr: amountUnitStr
     };
   };
+  $log.debug("txFormatService(): root.parseAmount " + root.parseAmount);
 
   root.satToUnit = function(amount) {
     var config = configService.getSync().wallet.settings;
@@ -222,6 +232,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
     var unitDecimals = config.unitDecimals;
     return parseFloat((amount * satToUnit).toFixed(unitDecimals));
   };
+  $log.debug("txFormatService(): root.satToUnit " + root.satToUnit);
 
   return root;
 });

@@ -183,13 +183,19 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     };
 
     function cacheBalance(wallet, balance) {
+      $log.debug("cacheBalance(): wallet: " + JSON.stringify(wallet));
+      $log.debug("cacheBalance(): balance: " + JSON.stringify(balance));
+
       if (!balance) return;
 
+      $log.debug("cacheBalance(): configService.getSync().wallet");
       var config = configService.getSync().wallet;
 
+      $log.debug("cacheBalance(): wallet.cachedStatus = " + JSON.stringify(wallet.cachedStatus));
       var cache = wallet.cachedStatus;
 
       // Address with Balance
+      $log.debug("cacheBalance(): balance.byAddress = " + balance.byAddress);
       cache.balanceByAddress = balance.byAddress;
 
       // Total wallet balance is same regardless of 'spend unconfirmed funds' setting.
@@ -211,11 +217,16 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
       }
 
       // Selected unit
+      $log.debug("cacheBalance(): config.settings.unitToSatoshi = " + config.settings.unitToSatoshi);
       cache.unitToSatoshi = config.settings.unitToSatoshi;
       cache.satToUnit = 1 / cache.unitToSatoshi;
       cache.unitName = config.settings.unitName;
 
       //STR
+      $log.debug("cacheBalance(): txFormatService.formatAmount() ");
+      if(!txFormatService) {
+          $log.debug("txFormatService is null");
+      }
       cache.totalBalanceStr = txFormatService.formatAmount(cache.totalBalanceSat) + ' ' + cache.unitName;
       cache.lockedBalanceStr = txFormatService.formatAmount(cache.lockedBalanceSat) + ' ' + cache.unitName;
       cache.availableBalanceStr = txFormatService.formatAmount(cache.availableBalanceSat) + ' ' + cache.unitName;
@@ -226,6 +237,7 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
       cache.alternativeIsoCode = config.settings.alternativeIsoCode;
 
       // Check address
+      $log.debug("root.isAddressUsed(): ");
       root.isAddressUsed(wallet, balance.byAddress, function(err, used) {
         if (used) {
           $log.debug('Address used. Creating new');
@@ -236,6 +248,7 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
         }
       });
 
+      $log.debug("rateService.whenAvailable(): ");
       rateService.whenAvailable(function() {
 
         var totalBalanceAlternative = rateService.toFiat(cache.totalBalanceSat, cache.alternativeIsoCode);
