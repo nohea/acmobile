@@ -54952,7 +54952,7 @@ function API(opts) {
   this.payProHttp = null; // Only for testing
   this.doNotVerifyPayPro = true || opts.doNotVerifyPayPro;
   this.timeout = opts.timeout || 50000;
-  this.logLevel = opts.logLevel || 'debug';
+  this.logLevel = opts.logLevel || 'silent';
   this.supportStaffWalletId = opts.supportStaffWalletId;
 
   log.setLevel(this.logLevel);
