@@ -14,7 +14,7 @@ angular.module('copayApp.services').factory('configService', function(storageSer
 
     // Bitcore wallet service URL
     bws: {
-      url: 'https://bws.btc.nationofhawaii.info/bws/api',
+      url: 'http://bws.alohaproto.nationofhawaii.info:4232/bws/api',
     },
 
     download: {
@@ -46,10 +46,10 @@ angular.module('copayApp.services').factory('configService', function(storageSer
       reconnectDelay: 5000,
       idleDurationMin: 4,
       settings: {
-        unitName: 'BTC',
+        unitName: 'ALCP',
         unitToSatoshi: 100000000,
-        unitDecimals: 8,
-        unitCode: 'btc',
+        unitDecimals: 4,
+        unitCode: 'alcp',
         alternativeName: 'US Dollar',
         alternativeIsoCode: 'USD',
       }

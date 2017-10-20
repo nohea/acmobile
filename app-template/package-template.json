@@ -51,12 +51,12 @@
   },
   "dependencies": {
     "adm-zip": "^0.4.7",
+    "alohacore-wallet-client": "file:../alohacore-wallet-client",
     "angular": "1.4.6",
     "angular-mocks": "1.4.10",
     "bezier-easing": "^2.0.3",
     "bhttp": "1.2.1",
     "bitauth": "^0.2.1",
-    "alohacore-wallet-client": "file:../alohacore-wallet-client",
     "bower": "^1.7.9",
     "cordova-android": "5.1.1",
     "cordova-custom-config": "^3.0.5",

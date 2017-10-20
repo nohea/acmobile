@@ -25,7 +25,7 @@ angular.module('copayApp.controllers').controller('preferencesBwsUrlController',
       switch ($scope.bwsurl.value) {
         case 'prod':
         case 'production':
-          bws = 'https://bws.btc.nationofhawaii.info/bws/api'
+          bws = 'http://bws.alohaproto.nationofhawaii.info/bws/api'
           break;
         case 'sta':
         case 'staging':
