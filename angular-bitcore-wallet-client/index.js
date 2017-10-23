@@ -34,7 +34,7 @@ bwcModule.provider("bwcService", function() {
 
       //note opts use `bwsurl` all lowercase;
       var bwc = new Client({
-        baseUrl: opts.bwsurl || 'http://bws.alohaproto.nationofhawaii.info/bws/api',
+        baseUrl: opts.bwsurl || 'http://bws.alohaproto.nationofhawaii.info:4232/bws/api',
         verbose: opts.verbose,
         timeout: 100000,
         transports: ['polling'],

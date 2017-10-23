@@ -23,6 +23,9 @@ angular.module('copayApp.services').factory('configService', function(storageSer
       },
       copay: {
         url: 'https://www.alohacoin.nationofhawaii.info/wallet'
+      },
+      acmobile: {
+        url: 'https://www.alohacoin.nationofhawaii.info/wallet'
       }
     },
 
@@ -75,7 +78,7 @@ angular.module('copayApp.services').factory('configService', function(storageSer
     },
 
     release: {
-      url: 'https://api.github.com/repos/bitpay/copay/releases/latest'
+      url: 'https://api.github.com/repos/nohea/acmobile/releases/latest'
     },
 
     pushNotificationsEnabled: true,
