@@ -937,6 +937,9 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
 
   // Approx utxo amount, from which the uxto is economically redeemable  
   root.getMinFee = function(wallet, feeLevels, nbOutputs) {
+    $log.debug("feeLevels: " + JSON.stringify(feeLevels));
+    $log.debug("wallet.network: " + wallet.network);
+
     var lowLevelRate = (lodash.find(feeLevels[wallet.network], {
       level: 'normal',
     }).feePerKB / 1000).toFixed(0);

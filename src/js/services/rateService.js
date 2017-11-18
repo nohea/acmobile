@@ -14,7 +14,7 @@ var RateService = function(opts) {
   var self = this;
 
   opts = opts || {};
-  self.httprequest = opts.httprequest; // || request;
+  self.httprequest = opts.httprequest;// || request;
   self.lodash = opts.lodash;
 
   self.SAT_TO_BTC = 1 / 1e8;
@@ -44,10 +44,13 @@ RateService.prototype._fetchCurrencies = function() {
 
   var backoffSeconds = 5;
   var updateFrequencySeconds = 5 * 60;
-  var rateServiceUrl = 'https://bitpay.com/api/rates';
+  var currencyCode = 'ALCP';
+  var rateServiceUrl = 'http://explorer.alohaproto.hekili.net:3441/ext/rates/' + currencyCode;
+  console.log("RateService._fetchCurrencies() " + rateServiceUrl);
 
   var retrieve = function() {
     //log.info('Fetching exchange rates');
+    console.log('Fetching exchange rates');
     self.httprequest.get(rateServiceUrl).success(function(res) {
       self.lodash.each(res, function(currency) {
         self._rates[currency.code] = currency.rate;
@@ -64,6 +67,7 @@ RateService.prototype._fetchCurrencies = function() {
       setTimeout(retrieve, updateFrequencySeconds * 1000);
     }).error(function(err) {
       //log.debug('Error fetching exchange rates', err);
+      console.log('Error fetching exchange rates' + err.message);
       setTimeout(function() {
         backoffSeconds *= 1.5;
         retrieve();
