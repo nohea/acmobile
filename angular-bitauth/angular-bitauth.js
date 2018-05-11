@@ -12539,7 +12539,13 @@ exports.shr64_lo = shr64_lo;
 
 },{"inherits":184,"minimalistic-assert":191}],48:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@=1.0.0",
+  "_args": [
+    [
+      "elliptic@1.0.0",
+      "/Users/raulg/cc/alohacore/acmobile"
+    ]
+  ],
+  "_from": "elliptic@1.0.0",
   "_id": "elliptic@1.0.0",
   "_inBundle": false,
   "_integrity": "sha1-KNknrowWxvZeRSpxSzbaQJVgPjk=",
@@ -12551,20 +12557,19 @@ module.exports={
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "elliptic@=1.0.0",
+    "raw": "elliptic@1.0.0",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "=1.0.0",
+    "rawSpec": "1.0.0",
     "saveSpec": null,
-    "fetchSpec": "=1.0.0"
+    "fetchSpec": "1.0.0"
   },
   "_requiredBy": [
     "/bitauth"
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-1.0.0.tgz",
-  "_shasum": "28d927ae8c16c6f65e452a714b36da4095603e39",
-  "_spec": "elliptic@=1.0.0",
-  "_where": "/Users/raulg/cc/alohacore/acmobile/node_modules/bitauth",
+  "_spec": "1.0.0",
+  "_where": "/Users/raulg/cc/alohacore/acmobile",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -12572,14 +12577,12 @@ module.exports={
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "bn.js": "^1.0.0",
     "brorand": "^1.0.1",
     "hash.js": "^1.0.0",
     "inherits": "^2.0.1"
   },
-  "deprecated": false,
   "description": "EC cryptography",
   "devDependencies": {
     "browserify": "^3.44.2",

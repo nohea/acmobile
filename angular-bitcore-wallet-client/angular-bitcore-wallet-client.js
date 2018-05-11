@@ -35,7 +35,7 @@ bwcModule.provider("bwcService", function() {
 
       //note opts use `bwsurl` all lowercase;
       var bwc = new Client({
-        baseUrl: opts.bwsurl || 'http://bws.alohaproto.nationofhawaii.info/bws/api',
+        baseUrl: opts.bwsurl || 'http://bws.alohaproto.nationofhawaii.info:4232/bws/api',
         verbose: opts.verbose,
         timeout: 100000,
         transports: ['polling'],
@@ -41500,29 +41500,34 @@ utils.getJSF = getJSF;
 
 },{}],273:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@^3.1.0",
+  "_args": [
+    [
+      "elliptic@3.1.0",
+      "/Users/raulg/cc/alohacore/alohacore-lib"
+    ]
+  ],
+  "_development": true,
+  "_from": "elliptic@3.1.0",
   "_id": "elliptic@3.1.0",
   "_inBundle": false,
   "_integrity": "sha1-whaC73YnabVqdCAWCRBdoR1fYMw=",
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "elliptic@^3.1.0",
+    "raw": "elliptic@3.1.0",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "^3.1.0",
+    "rawSpec": "3.1.0",
     "saveSpec": null,
-    "fetchSpec": "^3.1.0"
+    "fetchSpec": "3.1.0"
   },
   "_requiredBy": [
-    "#DEV:/",
-    "#USER"
+    "#DEV:/"
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-3.1.0.tgz",
-  "_shasum": "c21682ef762769b56a74201609105da11d5f60cc",
-  "_spec": "elliptic@^3.1.0",
+  "_spec": "3.1.0",
   "_where": "/Users/raulg/cc/alohacore/alohacore-lib",
   "author": {
     "name": "Fedor Indutny",
@@ -41531,14 +41536,12 @@ module.exports={
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "bn.js": "^2.0.3",
     "brorand": "^1.0.1",
     "hash.js": "^1.0.0",
     "inherits": "^2.0.1"
   },
-  "deprecated": false,
   "description": "EC cryptography",
   "devDependencies": {
     "browserify": "^3.44.2",
@@ -53993,6 +53996,7 @@ module.exports={
     "bs58": "=2.0.0",
     "buffer-compare": "=1.0.0",
     "hash.js": "^1.1.3",
+    "inherits": "^2.0.3",
     "lodash": "=3.10.1"
   },
   "devDependencies": {
@@ -54001,7 +54005,6 @@ module.exports={
     "chai": "^1.10.0",
     "elliptic": "^3.1.0",
     "gulp": "^3.8.10",
-    "inherits": "^2.0.3",
     "sinon": "^1.13.0"
   },
   "license": "MIT"
@@ -58509,7 +58512,9 @@ _.each(levels, function(level, levelName) {
         }
         var lines = stack.split('\n');
         var caller = lines[2];
-        caller = ':' + caller.substr(6);
+        if(caller && caller.substr) {
+          caller = ':' + caller.substr(6);
+	}
         Error.stackTraceLimit = old;
       }
 
