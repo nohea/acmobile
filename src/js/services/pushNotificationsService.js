@@ -3,7 +3,8 @@ angular.module('copayApp.services').factory('pushNotificationsService', function
   var root = {};
   var isIOS = platformInfo.isIOS;
   var isAndroid = platformInfo.isAndroid;
-  var usePushNotifications = platformInfo.isCordova && !platformInfo.isWP;
+  //var usePushNotifications = platformInfo.isCordova && !platformInfo.isWP;
+  var usePushNotifications = false; // disable FCM
 
   var _token = null;
 

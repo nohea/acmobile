@@ -105,7 +105,6 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
   root.getStatus = function(wallet, opts, cb) {
     opts = opts || {};
 
-
     function processPendingTxps(status) {
       var txps = status.pendingTxps;
       var now = Math.floor(Date.now() / 1000);
@@ -183,15 +182,16 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     };
 
     function cacheBalance(wallet, balance) {
-      $log.debug("cacheBalance(): wallet: " + JSON.stringify(wallet));
-      $log.debug("cacheBalance(): balance: " + JSON.stringify(balance));
+      // WARNING - these debug can cause cyclic ref error
+      //$log.debug("cacheBalance(): wallet: " + JSON.stringify(wallet));
+      //$log.debug("cacheBalance(): balance: " + JSON.stringify(balance));
 
       if (!balance) return;
 
       $log.debug("cacheBalance(): configService.getSync().wallet");
       var config = configService.getSync().wallet;
 
-      $log.debug("cacheBalance(): wallet.cachedStatus = " + JSON.stringify(wallet.cachedStatus));
+      //$log.debug("cacheBalance(): wallet.cachedStatus = " + JSON.stringify(wallet.cachedStatus));
       var cache = wallet.cachedStatus;
 
       // Address with Balance
