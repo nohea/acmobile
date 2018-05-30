@@ -702,7 +702,10 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     if (!wallet || !txp || !cb)
       return cb('MISSING_PARAMETER');
 
+    console.log('root.signTx() test');
+    console.log('wallet.isPrivKeyExternal() === ' + wallet.isPrivKeyExternal());
     if (wallet.isPrivKeyExternal()) {
+      console.log('wallet.getPrivKeyExternalSourceName() === ' + wallet.getPrivKeyExternalSourceName());
       switch (wallet.getPrivKeyExternalSourceName()) {
         case root.externalSource.ledger.id:
           return _signWithLedger(wallet, txp, cb);
@@ -718,6 +721,7 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     } else {
 
       try {
+	  console.log("wallet.signTxProposal( txp {" + Object.keys(txp) + "} " + password + ")");
         wallet.signTxProposal(txp, password, function(err, signedTxp) {
           $log.debug('Transaction signed err:' + err);
           return cb(err, signedTxp);
