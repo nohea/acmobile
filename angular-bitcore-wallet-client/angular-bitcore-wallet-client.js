@@ -68325,11 +68325,17 @@ API.prototype._processTxps = function(txps) {
   var self = this;
   if (!txps) return;
 
+  console.log("API._processTxps()");
   var encryptingKey = self.credentials.sharedEncryptingKey;
   _.each([].concat(txps), function(txp) {
+    console.log("  txp: ", txp);
+
     txp.encryptedMessage = txp.message;
     txp.message = API._decryptMessage(txp.message, encryptingKey) || null;
     txp.creatorName = API._decryptMessage(txp.creatorName, encryptingKey);
+
+    console.log("  txp.encryptedMessage (original message): ", txp.encryptedMessage);
+    console.log("  txp.message (decrytped): ", txp.message);
 
     _.each(txp.actions, function(action) {
       action.copayerName = API._decryptMessage(action.copayerName, encryptingKey);
@@ -68393,8 +68399,13 @@ API._parseError = function(body) {
  * @param {String} privKey - Private key to sign the request
  */
 API._signRequest = function(method, url, args, privKey) {
+  console.log("API._signRequest()");
+  console.log("  method, url, args, privKey: ", method, url, args, privKey);
   var message = [method.toLowerCase(), url, JSON.stringify(args)].join('|');
-  return Utils.signMessage(message, privKey);
+  console.log("  message: " + message);
+  var signedMessage = Utils.signMessage(message, privKey);
+  console.log("  signedMessage: ", signedMessage);
+  return signedMessage;
 };
 
 
@@ -69095,11 +69106,13 @@ API.parseSecret = function(secret) {
 };
 
 API.getRawTx = function(txp) {
+  console.log("API.getRawTx() ");
   var t = Utils.buildTx(txp);
   return t.uncheckedSerialize();
 };
 
 API.signTxp = function(txp, derivedXPrivKey) {
+  console.log("API.signTxp() ");
   //Derive proper key to sign, for each input
   var privs = [];
   var derived = {};
@@ -69124,6 +69137,11 @@ API.signTxp = function(txp, derivedXPrivKey) {
     return s.signature.toDER().toString('hex');
   });
 
+  console.log("client API.signTxp() - here is the txp + signatures: ");
+  console.log("txp: " + JSON.stringify(txp));
+  console.log("t: " + t);
+  console.log("signatures: " + JSON.stringify(signatures));
+
   return signatures;
 };
 
@@ -69133,6 +69151,7 @@ API.prototype._signTxp = function(txp, password) {
 };
 
 API.prototype._getCurrentSignatures = function(txp) {
+  console.log("API._getCurrentSignatures()");
   var acceptedActions = _.filter(txp.actions, {
     type: 'accept'
   });
@@ -69146,6 +69165,7 @@ API.prototype._getCurrentSignatures = function(txp) {
 };
 
 API.prototype._addSignaturesToBitcoreTx = function(txp, t, signatures, xpub) {
+  console.log("API._addSignaturesToBitcoreTx()");
   if (signatures.length != txp.inputs.length)
     throw new Error('Number of signatures does not match number of inputs');
 
@@ -69174,6 +69194,7 @@ API.prototype._addSignaturesToBitcoreTx = function(txp, t, signatures, xpub) {
 
 
 API.prototype._applyAllSignatures = function(txp, t) {
+  console.log("API._applyAllSignatures()");
   var self = this;
 
   $.checkState(txp.status == 'accepted');
@@ -69800,6 +69821,7 @@ API.prototype._getCreateTxProposalArgs = function(opts) {
  * @returns {Callback} cb - Return error or the transaction proposal
  */
 API.prototype.createTxProposal = function(opts, cb) {
+  console.log("API.createTxProposal()");
   $.checkState(this.credentials && this.credentials.isComplete());
   $.checkState(this.credentials.sharedEncryptingKey);
   $.checkArgument(opts);
@@ -69813,8 +69835,13 @@ API.prototype.createTxProposal = function(opts, cb) {
 
     self._processTxps(txp);
 
+    console.log("  Verifier.checkProposalCreation...");
     if (!Verifier.checkProposalCreation(args, txp, self.credentials.sharedEncryptingKey)) {
+      console.log("  txp check creation FAIL");
       return cb(new Errors.SERVER_COMPROMISED);
+    }
+    else {
+      console.log("  txp check creation passed.");
     }
 
     return cb(null, txp);
@@ -69835,6 +69862,7 @@ API.prototype.publishTxProposal = function(opts, cb) {
 
   $.checkState(parseInt(opts.txp.version) >= 3);
 
+  console.log("API.publishTxProposal()");
   var self = this;
 
   var t = Utils.buildTx(opts.txp);
@@ -69843,9 +69871,17 @@ API.prototype.publishTxProposal = function(opts, cb) {
     proposalSignature: Utils.signMessage(hash, self.credentials.requestPrivKey)
   };
 
+  console.log("  t: ", t);
+  console.log("  args.proposalSignature: ", args.proposalSignature);
+
   var url = '/v1/txproposals/' + opts.txp.id + '/publish/';
+  console.log("POST " + url);
   self._doPostRequest(url, args, function(err, txp) {
-    if (err) return cb(err);
+    if (err) {
+      console.log("err: ", err);
+      return cb(err);
+    }
+    console.log("  post no error.");
     self._processTxps(txp);
     return cb(null, txp);
   });
@@ -69962,9 +69998,11 @@ API.prototype.getTxProposals = function(opts, cb) {
 
   var self = this;
 
+  console.log("API.getTxProposals() checking txps from /v1/txproposals/");
   self._doGetRequest('/v1/txproposals/', function(err, txps) {
     if (err) return cb(err);
 
+    console.log("  got %d txps", txps.length);
     self._processTxps(txps);
     async.every(txps,
       function(txp, acb) {
@@ -70251,10 +70289,12 @@ API.prototype.broadcastTxProposal = function(txp, cb) {
 
   var self = this;
 
+  console.log("API.broadcastTxProposal()");
+  console.log("  getPayPro(txp)");
   self.getPayPro(txp, function(err, paypro) {
 
     if (paypro) {
-
+      console.log("  got paypro: ", paypro);
       var t = Utils.buildTx(txp);
       self._applyAllSignatures(txp, t);
 
@@ -70276,6 +70316,8 @@ API.prototype.broadcastTxProposal = function(txp, cb) {
         });
       });
     } else {
+      console.log("  no paypro, _doBroadcast(txp, cb)");
+      console.log("  txp: " + JSON.stringify(txp));
       self._doBroadcast(txp, cb);
     }
   });
@@ -70825,14 +70867,17 @@ Utils.hashMessage = function(text) {
 
 Utils.signMessage = function(text, privKey) {
   $.checkArgument(text);
+  console.log("Utils.signMessage()");
   var priv = new PrivateKey(privKey);
   var hash = Utils.hashMessage(text);
-  return crypto.ECDSA.sign(hash, priv, 'little').toString();
+  console.log("  hash: ", hash);
+  var signed = crypto.ECDSA.sign(hash, priv, 'little').toString();
+  return signed;
 };
 
 
 Utils.verifyMessage = function(text, signature, pubKey) {
-  console.log("bws client Utils.verifyMessage()");
+  console.log("bws client Utils.verifyMessage(text, signature, pubKey)");
   console.log("  text, signature, pubKey: ", text, signature, pubKey);
   $.checkArgument(text);
   $.checkArgument(pubKey);
@@ -72223,12 +72268,15 @@ Verifier.checkTxProposalSignature = function(credentials, txp) {
 
   var hash;
   if (parseInt(txp.version) >= 3) {
+    console.log("  Utils.buildTx(txp)");
     var t = Utils.buildTx(txp);
     hash = t.uncheckedSerialize();
+    console.log("  -> hash %s will be passed as the text to verifyMessage()", hash);
   } else {
     throw new Error('Transaction proposal not supported');
   }
 
+  console.log('Regenerating & verifying tx proposal hash -> Hash: ', hash, ' Signature: ', txp.proposalSignature);
   log.debug('Regenerating & verifying tx proposal hash -> Hash: ', hash, ' Signature: ', txp.proposalSignature);
   if (!Utils.verifyMessage(hash, txp.proposalSignature, creatorSigningPubKey)) {
     console.log("  !Utils.verifyMessage(hash, txp.proposalSignature, creatorSigningPubKey)");
