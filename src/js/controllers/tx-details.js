@@ -178,11 +178,15 @@ angular.module('copayApp.controllers').controller('txDetailsController', functio
 
   $scope.viewOnBlockchain = function() {
     var btx = $scope.btx;
-    var url = 'https://' + ($scope.getShortNetworkName() == 'test' ? 'test-' : '') + 'insight.bitpay.com/tx/' + btx.txid;
+    //var url = 'https://' + ($scope.getShortNetworkName() == 'test' ? 'test-' : '') + 'insight.bitpay.com/tx/' + btx.txid;
+    var url = config.blockExplorer.url + '/tx/' + btx.txid;
+    if( $scope.getShortNetworkName() === 'test') {
+	url = url.replace("://", "://test-");
+    }
     var optIn = true;
     var title = null;
-    var message = gettextCatalog.getString('View Transaction on Insight');
-    var okText = gettextCatalog.getString('Open Insight');
+    var message = gettextCatalog.getString('View Transaction on Explorer');
+    var okText = gettextCatalog.getString('Open Explorer');
     var cancelText = gettextCatalog.getString('Go Back');
     externalLinkService.open(url, optIn, title, message, okText, cancelText);
   };

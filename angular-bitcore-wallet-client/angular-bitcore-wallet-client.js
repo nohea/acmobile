@@ -35432,8 +35432,20 @@ Transaction.prototype.toBuffer = function() {
 Transaction.prototype.toBufferWriter = function(writer) {
   writer.writeInt32LE(this.version);
 
-  // ppcoin: if no timestamp present, take current time (in seconds)
-  var timestamp = this.timestamp ? this.timestamp : new Date().getTime()/1000;
+  // Peercoin: if no timestamp present, take current time (in seconds)
+  // then round backwards to the nearest hour.
+  // This will prevent transaction malleability and Payment Proposal
+  // validation errors.
+  var timestamp = null;
+  if(this._timestamp) {
+    //console.log("  have ts");
+    timestamp = this._timestamp;
+  }
+  else {
+    timestamp = this.defaultTxTimestamp();
+    this._timestamp = timestamp;
+    //console.log("  using last hr ts: ", this._timestamp);
+  }
   writer.writeUInt32LE(timestamp);
 
   writer.writeVarintNum(this.inputs.length);
@@ -35466,8 +35478,8 @@ Transaction.prototype.fromBufferReader = function(reader) {
 
   this.version = reader.readInt32LE();
 
-  // ppcoin: deserialize timestamp
-  this.timestamp = reader.readUInt32LE();
+  // Peercoin: deserialize timestamp
+  this._timestamp = reader.readUInt32LE();
 
   sizeTxIns = reader.readVarintNum();
   for (i = 0; i < sizeTxIns; i++) {
@@ -35507,6 +35519,12 @@ Transaction.prototype.toObject = Transaction.prototype.toJSON = function toObjec
   if (!_.isUndefined(this._fee)) {
     obj.fee = this._fee;
   }
+
+  // Peercoin pre-v0.7
+  if (!_.isUndefined(this._timestamp)) {
+    obj.timestamp = this._timestamp;
+  }
+  
   return obj;
 };
 
@@ -35553,6 +35571,7 @@ Transaction.prototype.fromObject = function fromObject(arg) {
     this._fee = transaction.fee;
   }
   this.nLockTime = transaction.nLockTime;
+  this._timestamp = transaction.timestamp || this.defaultTxTimestamp(); // Peercoin pre-v0.7
   this.version = transaction.version;
   this._checkConsistency(arg);
   return this;
@@ -36393,6 +36412,26 @@ Transaction.prototype.enableRBF = function() {
   }
   return this;
 };
+
+// Peercoin tx.time pre-v0.7
+Transaction.prototype.defaultTxTimestamp = function() {
+  var timestamp;
+  var lhd = new Date();
+  var lastHourTimestamp = roundToHour(lhd).getTime();
+  timestamp = Math.round(lastHourTimestamp/1000);
+  return timestamp;
+};
+
+Transaction.prototype.timestamp = function(ts) {
+  $.checkArgument(_.isNumber(ts), 'ts must be a number');
+  this._timestamp = ts;
+  return this;
+};
+
+function roundToHour(date) {
+  var p = 60 * 60 * 1000; // milliseconds in an hour
+  return new Date(Math.round(date.getTime() / p ) * p);
+}
 
 module.exports = Transaction;
 
@@ -54794,6 +54833,7 @@ module.exports={
     "bn.js": "=2.0.4",
     "bs58": "=2.0.0",
     "buffer-compare": "=1.0.0",
+    "elliptic": "^3.1.0",
     "hash.js": "^1.1.3",
     "inherits": "^2.0.3",
     "lodash": "=3.10.1"
@@ -68325,17 +68365,12 @@ API.prototype._processTxps = function(txps) {
   var self = this;
   if (!txps) return;
 
-  console.log("API._processTxps()");
   var encryptingKey = self.credentials.sharedEncryptingKey;
   _.each([].concat(txps), function(txp) {
-    console.log("  txp: ", txp);
 
     txp.encryptedMessage = txp.message;
     txp.message = API._decryptMessage(txp.message, encryptingKey) || null;
     txp.creatorName = API._decryptMessage(txp.creatorName, encryptingKey);
-
-    console.log("  txp.encryptedMessage (original message): ", txp.encryptedMessage);
-    console.log("  txp.message (decrytped): ", txp.message);
 
     _.each(txp.actions, function(action) {
       action.copayerName = API._decryptMessage(action.copayerName, encryptingKey);
@@ -68399,12 +68434,8 @@ API._parseError = function(body) {
  * @param {String} privKey - Private key to sign the request
  */
 API._signRequest = function(method, url, args, privKey) {
-  console.log("API._signRequest()");
-  console.log("  method, url, args, privKey: ", method, url, args, privKey);
   var message = [method.toLowerCase(), url, JSON.stringify(args)].join('|');
-  console.log("  message: " + message);
   var signedMessage = Utils.signMessage(message, privKey);
-  console.log("  signedMessage: ", signedMessage);
   return signedMessage;
 };
 
@@ -68771,7 +68802,6 @@ API.prototype.decryptBIP38PrivateKey = function(encryptedPrivateKeyBase58, passp
 API.prototype.getBalanceFromPrivateKey = function(privateKey, cb) {
   var self = this;
 
-  console.log("API.getBalanceFromPrivateKey() ");
   var privateKey = new Bitcore.PrivateKey(privateKey);
   var address = privateKey.publicKey.toAddress();
   self.getUtxos({
@@ -68898,8 +68928,8 @@ API.prototype._doRequest = function(method, url, args, useSession, cb) {
   var self = this;
 
   var headers = self._getHeaders(method, url, args);
-  console.log(method, url, JSON.stringify(args));
-  console.log("headers: " + JSON.stringify(headers));
+  //console.log("method, url, args", method, url, args);
+  //console.log("headers: " + headers);
   
   if (self.credentials) {
     headers['x-identity'] = self.credentials.copayerId;
@@ -68938,6 +68968,7 @@ API.prototype._doRequest = function(method, url, args, useSession, cb) {
 
   r.end(function(err, res) {
     if (!res) {
+      console.log("err: ", err);
       return cb(new Errors.CONNECTION_ERROR);
     }
 
@@ -69122,6 +69153,8 @@ API.signTxp = function(txp, derivedXPrivKey) {
   _.each(txp.inputs, function(i) {
     $.checkState(i.path, "Input derivation path not available (signing transaction)")
     if (!derived[i.path]) {
+      var derivationPath = i.path;
+      console.log("  derivationPath: ", derivationPath);
       derived[i.path] = xpriv.deriveChild(i.path).privateKey;
       privs.push(derived[i.path]);
     }
@@ -69176,6 +69209,8 @@ API.prototype._addSignaturesToBitcoreTx = function(txp, t, signatures, xpub) {
     var input = txp.inputs[i];
     try {
       var signature = Bitcore.crypto.Signature.fromString(signatureHex);
+      var derivationPath = txp.inputPaths[i];
+      console.log("  derivationPath: ", derivationPath);
       var pub = x.deriveChild(txp.inputPaths[i]).publicKey;
       var s = {
         inputIndex: i,
@@ -69830,11 +69865,21 @@ API.prototype.createTxProposal = function(opts, cb) {
 
   var args = self._getCreateTxProposalArgs(opts);
 
+  // client sends txp args to the bitcore wallet service to build
+  // the actual tx proposal.
+  // If it works, it is stored on the server and validated on this client side.
   self._doPostRequest('/v2/txproposals/', args, function(err, txp) {
     if (err) return cb(err);
 
     self._processTxps(txp);
 
+    console.log("  args in:\n", args);
+    // convert args amounts for satoshis to coin if needed - Peercoin
+    var pargs = Utils.convertTxpSatoshiToCoinProtocol(args, 1e8, 1e6);
+
+    console.log("  args out:\n", args);
+    console.log("  txp in:\n", txp);
+    
     console.log("  Verifier.checkProposalCreation...");
     if (!Verifier.checkProposalCreation(args, txp, self.credentials.sharedEncryptingKey)) {
       console.log("  txp check creation FAIL");
@@ -70011,6 +70056,7 @@ API.prototype.getTxProposals = function(opts, cb) {
 	  if(err) { console.log('Error: ', err); }
 	  
 	  console.log("  getPayPro() got paypro: " + paypro);
+	  console.log("  txp: ", txp);
           var isLegit = Verifier.checkTxProposal(self.credentials, txp, {
             paypro: paypro,
           });
@@ -70317,7 +70363,7 @@ API.prototype.broadcastTxProposal = function(txp, cb) {
       });
     } else {
       console.log("  no paypro, _doBroadcast(txp, cb)");
-      console.log("  txp: " + JSON.stringify(txp));
+      //console.log("  txp: " + JSON.stringify(txp)); cyclic
       self._doBroadcast(txp, cb);
     }
   });
@@ -70798,10 +70844,12 @@ module.exports = Constants;
 
 var Defaults = {};
 
-Defaults.DEFAULT_FEE_PER_KB = 10000;
+Defaults.COIN = 1e8; // Bitcoin satoshis
+Defaults.PEERCOIN_COIN = 1e6; // Peercoin smallest unit sunnys
+Defaults.DEFAULT_FEE_PER_KB = Defaults.COIN / 1e3;
 Defaults.MIN_FEE_PER_KB = 0;
-Defaults.MAX_FEE_PER_KB = 1000000;
-Defaults.MAX_TX_FEE = 1 * 1e8;
+Defaults.MAX_FEE_PER_KB = Defaults.COIN;
+Defaults.MAX_TX_FEE = 1 * Defaults.COIN;
 
 module.exports = Defaults;
 
@@ -71030,7 +71078,10 @@ Utils.buildTx = function(txp) {
   }
 
   t.fee(txp.fee);
-  t.change(txp.changeAddress.address);
+
+  if (txp.changeAddress) {
+    t.change(txp.changeAddress.address);
+  }
 
   // Shuffle outputs for improved privacy
   if (t.outputs.length > 1) {
@@ -71059,6 +71110,61 @@ Utils.buildTx = function(txp) {
   return t;
 };
 
+Utils.convertTxpSatoshiToCoinProtocol = function(opts, fromSatToCoin, toSatToCoin) {
+  var self = this;
+
+  // this is to adjust the satoshi to coin ratio in the tx proposal, before
+  // before it is signed or is written to the rawtx
+  // In Peercoin we have to use 1 / (1e8 / 1e6) = 0.01
+  // to convert from Bitcoin to Peercoin,
+  // fromSatToCoin = 1e8, toSatToCoin = 1e6
+  if( ! fromSatToCoin ) {
+    fromSatToCoin = Defaults.COIN;
+  }
+  if( ! toSatToCoin ) {
+    toSatToCoin = Defaults.COIN;
+  }
+  var coinRatio = 1 / (fromSatToCoin / toSatToCoin);
+  console.log("convertTxpSatoshiToCoinProtocol() : coinRatio: ", coinRatio);
+
+  console.log("  incoming: ", opts, "\n");
+
+  if( _.isNumber(opts.feeLevel) ) {
+    opts.feeLevel = opts.feeLevel * coinRatio;
+  }
+  if( _.isNumber(opts.feePerKb) ) {
+    opts.feePerKb = opts.feePerKb * coinRatio;
+  }
+  if( _.isNumber(opts.fee) ) {
+    opts.fee = opts.fee * coinRatio;
+  }
+
+  if(opts.outputs) {
+    for (var i = 0; i < opts.outputs.length; i++) {
+      var output = opts.outputs[i];
+      if( _.isNumber(output.amount) ) {
+	opts.outputs[i].amount = output.amount * coinRatio;
+      }
+    }
+  }
+
+  if(opts.inputs) {
+    for (var i = 0; i < opts.inputs.length; i++) {
+      var input = opts.inputs[i];
+      if( _.isNumber(input.satoshis) ) {
+	opts.inputs[i].satoshis = input.satoshis * coinRatio;
+      }
+    }
+  }
+
+  if( opts.amount ) {
+    opts.amount = opts.amount * coinRatio;
+  }
+
+  console.log("  outgoing: ", opts, "\n");
+
+  return opts;
+};
 
 module.exports = Utils;
 
@@ -72192,22 +72298,30 @@ Verifier.checkProposalCreation = function(args, txp, encryptingKey) {
   function strEqual(str1, str2) {
     return ((!str1 && !str2) || (str1 === str2));
   }
-
+  console.log("Verifier.checkProposalCreation() ", "one");
   if (txp.outputs.length != args.outputs.length) return false;
 
+  console.log("Verifier.checkProposalCreation() ", "two");
   for (var i = 0; i < txp.outputs.length; i++) {
     var o1 = txp.outputs[i];
     var o2 = args.outputs[i];
     if (!strEqual(o1.toAddress, o2.toAddress)) return false;
     if (!strEqual(o1.script, o2.script)) return false;
-    if (o1.amount != o2.amount) return false;
+    if (o1.amount != o2.amount) {
+      console.log("Verifier.checkProposalCreation() amounts not equal: ", o1.amount, o2.amount);
+      return false;
+    }
     var decryptedMessage = null;
     try {
       decryptedMessage = Utils.decryptMessage(o2.message, encryptingKey);
     } catch (e) {
+      console.log("Verifier.checkProposalCreation() ", "fail decrypt msg");
       return false;
     }
-    if (!strEqual(o1.message, decryptedMessage)) return false;
+    if (!strEqual(o1.message, decryptedMessage)) {
+      console.log("Verifier.checkProposalCreation() ", "messages not equal");
+      return false;
+    }
   }
 
   var changeAddress;
@@ -72216,16 +72330,23 @@ Verifier.checkProposalCreation = function(args, txp, encryptingKey) {
   }
 
   if (args.changeAddress && !strEqual(changeAddress, args.changeAddress)) return false;
-  if (_.isNumber(args.feePerKb) && (txp.feePerKb != args.feePerKb)) return false;
+  if (_.isNumber(args.feePerKb) && (txp.feePerKb != args.feePerKb)) {
+    console.log("Verifier.checkProposalCreation() fail: txp.feePer %s Kb != args.feePerKb %s", txp.feePerKb, args.feePerKb);
+    return false;
+  }
   if (!strEqual(txp.payProUrl, args.payProUrl)) return false;
 
   var decryptedMessage = null;
   try {
     decryptedMessage = Utils.decryptMessage(args.message, encryptingKey);
   } catch (e) {
+    console.log("Verifier.checkProposalCreation() no decrypt ", "");
     return false;
   }
-  if (!strEqual(txp.message, decryptedMessage)) return false;
+  if (!strEqual(txp.message, decryptedMessage)) {
+    console.log("Verifier.checkProposalCreation() ", "not equal txp.message ", txp.message, decryptedMessage);
+    return false;
+  }
   if (args.customData && !_.isEqual(txp.customData, args.customData)) return false;
 
   return true;
@@ -72271,7 +72392,7 @@ Verifier.checkTxProposalSignature = function(credentials, txp) {
     console.log("  Utils.buildTx(txp)");
     var t = Utils.buildTx(txp);
     hash = t.uncheckedSerialize();
-    console.log("  -> hash %s will be passed as the text to verifyMessage()", hash);
+    console.log("  -> raw hash %s will be passed as the text to verifyMessage()", hash);
   } else {
     throw new Error('Transaction proposal not supported');
   }
@@ -87194,11 +87315,11 @@ module.exports={
     "url": "https://github.com/nohea/alohacore-wallet-client/issues"
   },
   "dependencies": {
-    "async": "^0.9.0",
-    "bip38": "^1.3.0",
     "alohacore-lib": "file:../alohacore-lib",
     "alohacore-mnemonic": "file:../alohacore-mnemonic",
     "alohacore-payment-protocol": "file:../alohacore-payment-protocol",
+    "async": "^0.9.0",
+    "bip38": "^1.3.0",
     "json-stable-stringify": "^1.0.0",
     "lodash": "^3.3.1",
     "preconditions": "^1.0.8",

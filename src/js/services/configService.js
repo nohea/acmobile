@@ -81,6 +81,10 @@ angular.module('copayApp.services').factory('configService', function(storageSer
       url: 'https://api.github.com/repos/nohea/acmobile/releases/latest'
     },
 
+    blockExplorer: {
+	  url: 'http://explorer.alohaproto.hekili.net:3441',
+    },
+
     pushNotificationsEnabled: true,
 
     confirmedTxsNotifications: {
