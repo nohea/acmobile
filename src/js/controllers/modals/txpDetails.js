@@ -203,6 +203,7 @@ angular.module('copayApp.controllers').controller('txpDetailsController', functi
   };
 
   var updateTxInfo = function(eventName) {
+    console.log("  updateTxInfo()");
     $scope.wallet.getTx($scope.tx.id, function(err, tx) {
       if (err) {
         if (err.message && err.message == 'Transaction proposal not found' &&
@@ -213,6 +214,15 @@ angular.module('copayApp.controllers').controller('txpDetailsController', functi
           $scope.$apply();
         }
         return;
+      }
+
+      // TEMP HACK
+      if(true || event === "NewOutgoingTx" && $scope.amountStr) {
+	  console.log("adjust $scope.amountStr ", $scope.amountStr);
+	  $scope.amountStr = $scope.amountStr * (1e8 / 1e6);
+      }
+      else {
+	  console.log("  no $scope.amountStr");
       }
 
       var action = lodash.find(tx.actions, {
@@ -239,6 +249,7 @@ angular.module('copayApp.controllers').controller('txpDetailsController', functi
         'NewOutgoingTx',
         'UpdateTx'
     ], function(eventName) {
+      console.log("bwsEvent ", eventName);
       if (walletId == $scope.wallet.id && type == eventName) {
         updateTxInfo(eventName);
       }

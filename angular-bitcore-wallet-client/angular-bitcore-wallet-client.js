@@ -68928,7 +68928,7 @@ API.prototype._doRequest = function(method, url, args, useSession, cb) {
   var self = this;
 
   var headers = self._getHeaders(method, url, args);
-  //console.log("method, url, args", method, url, args);
+  console.log("method, url, args", method, url, args);
   //console.log("headers: " + headers);
   
   if (self.credentials) {
@@ -68995,6 +68995,7 @@ API.prototype._doRequest = function(method, url, args, useSession, cb) {
     if (res.body === '{"error":"read ECONNRESET"}')
       return cb(new Errors.ECONNRESET_ERROR(JSON.parse(res.body)));
 
+    console.log("return body: ", res.body);
     return cb(null, res.body, res.header);
   });
 };

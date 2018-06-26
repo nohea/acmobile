@@ -809,7 +809,7 @@ angular.module('copayApp.services')
 
     root.getNotifications = function(opts, cb) {
       opts = opts || {};
-
+      console.log("ProfileService.getNotifications()");
       var TIME_STAMP = 60 * 60 * 6;
       var MAX = 30;
 
@@ -861,8 +861,12 @@ angular.module('copayApp.services')
           x.txid = x.data ? x.data.txid : null;
           x.types = [x.type];
 
-          if (x.data && x.data.amount)
-            x.amountStr = txFormatService.formatAmountStr(x.data.amount);
+          if (x.data && x.data.amount) {
+            // TEMP HACK
+            console.log("  HACK x.data.amount to 1e6 sats");
+            var amtStrTmp = x.data.amount * (1e8 / 1e6);
+            x.amountStr = txFormatService.formatAmountStr(amtStrTmp);
+	  }
 
           x.action = function() {
             // TODO?

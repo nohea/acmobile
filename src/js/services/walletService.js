@@ -184,14 +184,14 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     function cacheBalance(wallet, balance) {
       // WARNING - these debug can cause cyclic ref error
       //$log.debug("cacheBalance(): wallet: " + JSON.stringify(wallet));
-      //$log.debug("cacheBalance(): balance: " + JSON.stringify(balance));
+      $log.debug("cacheBalance(): balance: ", balance);
 
       if (!balance) return;
 
       $log.debug("cacheBalance(): configService.getSync().wallet");
       var config = configService.getSync().wallet;
 
-      //$log.debug("cacheBalance(): wallet.cachedStatus = " + JSON.stringify(wallet.cachedStatus));
+      $log.debug("cacheBalance(): wallet.cachedStatus = ", wallet.cachedStatus);
       var cache = wallet.cachedStatus;
 
       // Address with Balance

@@ -18,14 +18,14 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
     $log.debug("calling this.Utils.formatAmount()");
     return this.Utils.formatAmount(satoshis, config.unitCode, opts);
   };
-  $log.debug("txFormatService(): root.formatAmount " + root.formatAmount);
+  $log.debug("txFormatService(): root.formatAmount() ");
 
   root.formatAmountStr = function(satoshis) {
     if (isNaN(satoshis)) return;
     var config = configService.getSync().wallet.settings;
     return root.formatAmount(satoshis) + ' ' + config.unitName;
   };
-  $log.debug("txFormatService(): root.formatAmountStr " + root.formatAmountStr);
+  $log.debug("txFormatService(): root.formatAmountStr ");
 
   root.toFiat = function(satoshis, code, cb) {
     if (isNaN(satoshis)) return;
@@ -46,7 +46,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
-  $log.debug("txFormatService(): root.toFiat " + root.toFiat);
+  $log.debug("txFormatService(): root.toFiat() ");
 
   root.formatToUSD = function(satoshis, cb) {
     if (isNaN(satoshis)) return;
@@ -67,7 +67,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
-  $log.debug("txFormatService(): root.formatToUSD " + root.formatToUSD);
+  $log.debug("txFormatService(): root.formatToUSD ");
 
   root.formatAlternativeStr = function(satoshis, cb) {
     if (isNaN(satoshis)) return;
@@ -91,7 +91,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       return val();
     };
   };
-  $log.debug("txFormatService(): root.formatAlternativeStr " + root.formatAlternativeStr);
+  $log.debug("txFormatService(): root.formatAlternativeStr ");
 
   root.processTx = function(tx) {
     if (!tx || tx.action == 'invalid')
@@ -187,7 +187,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
 
     return txps;
   };
-  $log.debug("txFormatService(): root.formatPendingTxps " + root.formatPendingTxps);
+  $log.debug("txFormatService(): root.formatPendingTxps() ");
 
   root.parseAmount = function(amount, currency) {
     var config = configService.getSync().wallet.settings;
@@ -196,9 +196,16 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
     var amountUnitStr;
     var amountSat;
     var alternativeIsoCode = config.alternativeIsoCode;
+    var unitName = config.unitName || 'BTC';
+
+    console.log("  satToBtc: ", satToBtc);
+    console.log("  unitToSatoshi: ", unitToSatoshi);
+    console.log("  amountSat: ", amountSat);
+    console.log("  currency: ", currency);
+    console.log("  unitName: ", unitName);
 
     // If fiat currency
-    if (currency != 'bits' && currency != 'ALCP' && currency != 'sat') {
+    if (currency != 'bits' && currency != unitName && currency != 'sat') {
       amountUnitStr = $filter('formatFiatAmount')(amount) + ' ' + currency;
       amountSat = rateService.fromFiat(amount, currency).toFixed(0);
     } else if (currency == 'sat') {
@@ -206,13 +213,13 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       amountUnitStr = root.formatAmountStr(amountSat);
       // convert sat to BTC
       amount = (amountSat * satToBtc).toFixed(8);
-      currency = 'ALCP';
+      currency = unitName;
     } else {
       amountSat = parseInt((amount * unitToSatoshi).toFixed(0));
       amountUnitStr = root.formatAmountStr(amountSat);
       // convert unit to BTC
       amount = (amountSat * satToBtc).toFixed(8);
-      currency = 'ALCP';
+      currency = unitName;
     }
 
     return {
@@ -223,7 +230,7 @@ angular.module('copayApp.services').factory('txFormatService', function($filter,
       amountUnitStr: amountUnitStr
     };
   };
-  $log.debug("txFormatService(): root.parseAmount " + root.parseAmount);
+  $log.debug("txFormatService(): root.parseAmount() ");
 
   root.satToUnit = function(amount) {
     var config = configService.getSync().wallet.settings;

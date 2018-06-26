@@ -235,6 +235,7 @@ angular.module('copayApp.controllers').controller('confirmController', function(
     $scope.tx = tx;
 
     function updateAmount() {
+      console.log("updateTx() -> updateAmount()");
       if (!tx.toAmount) return;
 
       // Amount
@@ -244,6 +245,8 @@ angular.module('copayApp.controllers').controller('confirmController', function(
       txFormatService.formatAlternativeStr(tx.toAmount, function(v) {
         tx.alternativeAmountStr = v;
       });
+      console.log("  tx.amountStr: ", tx.amountStr);
+      console.log("  tx.amountValueStr: ", tx.amountValueStr);
     }
 
     updateAmount();
@@ -292,11 +295,14 @@ angular.module('copayApp.controllers').controller('confirmController', function(
         getTxp(lodash.clone(tx), wallet, opts.dryRun, function(err, txp) {
           if (err) return cb(err);
 
-          txp.feeStr = txFormatService.formatAmountStr(txp.fee);
+          // TEMP HACK ALCP modify display of fee before published txp
+          txp.feeStr = txFormatService.formatAmountStr(convertSatPerCoin(txp.fee));
+          txp.amountStr = txFormatService.formatAmountStr(convertSatPerCoin(txp.amount));
           txFormatService.formatAlternativeStr(txp.fee, function(v) {
             txp.alternativeFeeStr = v;
           });
 
+          console.log("  txp.fee, txp.amount", txp.fee, txp.amount);
           var per = (txp.fee / (txp.amount + txp.fee) * 100);
           txp.feeRatePerStr = per.toFixed(2) + '%';
           txp.feeToHigh = per > FEE_TOO_HIGH_LIMIT_PER;
@@ -309,6 +315,19 @@ angular.module('copayApp.controllers').controller('confirmController', function(
         });
       });
     });
+  }
+
+  function convertSatPerCoin(amount) {
+      var convertedAmt;
+      // TEMP HACK ALCP modify display of fee before published txp
+      // adjust for fee display before the txp is submitted
+      if(amount) {
+	  console.log("TEMP HACK ALCP confirm.js convertSatPerCoin() change 0.000001 to 0.0001");
+	  console.log("  convertedAmt %s = amount %s * (1e8 / 1e6)", convertedAmt, amount);
+	  // change 0.000001 to 0.0001
+	  convertedAmt = amount * (1e8 / 1e6);
+      }
+      return convertedAmt;
   }
 
   function useSelectedWallet() {
