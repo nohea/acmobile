@@ -14,7 +14,7 @@ angular.module('copayApp.services').factory('configService', function(storageSer
 
     // Bitcore wallet service URL
     bws: {
-      url: 'http://bws.alohaproto.nationofhawaii.info:4232/bws/api',
+      url: 'https://bws.alohaproto.nationofhawaii.info/bws/api',
     },
 
     download: {
