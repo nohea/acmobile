@@ -131,6 +131,8 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
 
         tx = txFormatService.processTx(tx);
 
+	console.log("  processPendingTxps() tx: ", tx);
+
         // no future transactions...
         if (tx.createdOn > now)
           tx.createdOn = now;
@@ -282,7 +284,16 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
     };
 
     function walletStatusHash(status) {
-      return status ? status.balance.totalAmount : wallet.totalBalanceSat;
+      if(status) {
+        console.log("walletStatusHash(status): return status.balance.totalAmount ", status.balance.totalAmount);
+        console.log("  FYI: wallet.totalBalanceSat ", wallet.totalBalanceSat);
+        return status.balance.totalAmount;
+      }
+      else {
+        console.log("walletStatusHash(status): return wallet.totalBalanceSat ", wallet.totalBalanceSat);
+        return wallet.totalBalanceSat;
+      }
+      //return status ? status.balance.totalAmount : wallet.totalBalanceSat;
     };
 
     function _getStatus(initStatusHash, tries, cb) {
@@ -301,6 +312,7 @@ angular.module('copayApp.services').factory('walletService', function($log, $tim
 
         var currentStatusHash = walletStatusHash(status);
         $log.debug('Status update. hash:' + currentStatusHash + ' Try:' + tries);
+	$log.debug("  status: " + JSON.stringify(status));
         if (opts.untilItChanges &&
           initStatusHash == currentStatusHash &&
           tries < root.WALLET_STATUS_MAX_TRIES &&

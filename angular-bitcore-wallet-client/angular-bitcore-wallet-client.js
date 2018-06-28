@@ -68995,7 +68995,7 @@ API.prototype._doRequest = function(method, url, args, useSession, cb) {
     if (res.body === '{"error":"read ECONNRESET"}')
       return cb(new Errors.ECONNRESET_ERROR(JSON.parse(res.body)));
 
-    console.log("return body: ", res.body);
+    //console.log("return body: ", res.body);
     return cb(null, res.body, res.header);
   });
 };
@@ -69659,6 +69659,8 @@ API.prototype._processStatus = function(status) {
     }
     if (!customData) return;
 
+    console.log("  API._processStatus() customData: ", customData);
+
     // Add it to result
     data.customData = customData;
 
@@ -69667,6 +69669,7 @@ API.prototype._processStatus = function(status) {
       self.credentials.addWalletPrivateKey(customData.walletPrivKey);
   };
 
+  console.log("bwc API._processStatus()");
   processCustomData(status);
   self._processWallet(status.wallet);
   self._processTxps(status.pendingTxps);
@@ -69722,6 +69725,8 @@ API.prototype.getStatus = function(opts, cb) {
     log.warn('DEPRECATED WARN: getStatus should receive 2 parameters.')
   }
 
+  console.log("bwc API.getStatus()");
+
   var self = this;
   opts = opts || {};
 
@@ -69729,8 +69734,10 @@ API.prototype.getStatus = function(opts, cb) {
   qs.push('includeExtendedInfo=' + (opts.includeExtendedInfo ? '1' : '0'));
   qs.push('twoStep=' + (opts.twoStep ? '1' : '0'));
 
+  console.log("GET " + '/v2/wallets/?' + qs.join('&'));
   self._doGetRequest('/v2/wallets/?' + qs.join('&'), function(err, result) {
     if (err) return cb(err);
+    console.log("  result: ", result);
     if (result.wallet.status == 'pending') {
       var c = self.credentials;
       result.wallet.secret = API._buildSecret(c.walletId, c.walletPrivKey, c.network);

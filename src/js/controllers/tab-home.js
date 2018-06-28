@@ -44,6 +44,12 @@ angular.module('copayApp.controllers').controller('tabHomeController',
 
       storageService.getFeedbackInfo(function(error, info) {
 
+        // disable feedback
+        if (true) {
+          $scope.showRateCard.value = false;
+          return;
+        }
+
         if ($scope.isWindowsPhoneApp) {
           $scope.showRateCard.value = false;
           return;
